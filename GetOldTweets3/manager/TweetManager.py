@@ -178,11 +178,10 @@ class TweetManager:
         if sp1.find('a'):
             sp1.a.decompose()
 
-        text1 = str(sp1)
-
         if emoji == 'ignore':
             return sp1.text
-        
+
+        text1 = str(sp1)        
         for x in sp1.find_all('img'):
             if emoji == 'unicode':
                 text1 = text1.replace(str(x), str(x['alt']))
