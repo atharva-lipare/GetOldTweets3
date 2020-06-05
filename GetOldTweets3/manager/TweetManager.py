@@ -181,7 +181,7 @@ class TweetManager:
         text1 = str(sp1)
 
         if emoji == 'ignore':
-            return BeautifulSoup(text1, "lxml").text
+            return sp1.text
         
         for x in sp1.find_all('img'):
             if emoji == 'unicode':
