@@ -181,8 +181,10 @@ class TweetManager:
 
         #txt1 = re.sub(r'\S+.com\S+', '', txt1)
         hashTagList = re.findall(r'#(\w+)', txt1)
-        mentionList = re.findall(r'@(\w+)', txt1)
+        mentionList = re.findall(r'@(\w+)', txt1)        
         #txt1 = re.sub(r'https?://\S+', '', txt1)
+        txt1 = re.sub(r'\n', '', txt1)
+        txt1 = re.sub(r'\s+', ' ', txt1)
 
         if emoji == 'ignore':
             return BeautifulSoup(txt1, "lxml").text, hashTagList, mentionList
