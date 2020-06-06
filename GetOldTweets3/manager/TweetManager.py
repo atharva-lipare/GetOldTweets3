@@ -86,9 +86,8 @@ class TweetManager:
 
                     tweet.username = usernames[0]
                     tweet.to = usernames[1] if len(usernames) >= 2 else None  # take the first recipient if many
-                    rawtext = TweetManager.textify(tweetPQ("p.js-tweet-text").html(), tweetCriteria.emoji)
-                    tweet.text = re.sub(r"\s+", " ", rawtext)\
-                        .replace('# ', '#').replace('@ ', '@').replace('$ ', '$')
+                    tweet.text, tweet.hashtags, tweet.mentions = TweetManager.textify(tweetPQ("p.js-tweet-text").html(), tweetCriteria.emoji)
+                    #tweet.text = re.sub(r"\s+", " ", rawtext).replace('# ', '#').replace('@ ', '@').replace('$ ', '$')
                     tweet.retweets = int(tweetPQ("span.ProfileTweet-action--retweet span.ProfileTweet-actionCount").attr("data-tweet-stat-count").replace(",", ""))
                     tweet.favorites = int(tweetPQ("span.ProfileTweet-action--favorite span.ProfileTweet-actionCount").attr("data-tweet-stat-count").replace(",", ""))
                     tweet.replies = int(tweetPQ("span.ProfileTweet-action--reply span.ProfileTweet-actionCount").attr("data-tweet-stat-count").replace(",", ""))
@@ -100,7 +99,7 @@ class TweetManager:
                     tweet.date = datetime.datetime.fromtimestamp(dateSec, tz=datetime.timezone.utc)
                     tweet.formatted_date = datetime.datetime.fromtimestamp(dateSec, tz=datetime.timezone.utc)\
                                                             .strftime("%a %b %d %X +0000 %Y")
-                    tweet.hashtags, tweet.mentions = TweetManager.getHashtagsAndMentions(tweetPQ)
+                    #tweet.hashtags, tweet.mentions = TweetManager.getHashtagsAndMentions(tweetPQ)
 
                     geoSpan = tweetPQ('span.Tweet-geo')
                     if len(geoSpan) > 0:
@@ -171,24 +170,31 @@ class TweetManager:
     @staticmethod
     def textify(html, emoji):
         """
-        Returns text inside tweets including emojis, discards link of linked tweets eg:- link to retweeted tweet
+        Returns text inside tweets including emojis
         """
 
         sp1 = BeautifulSoup(html, "lxml")
-        if sp1.find('a'):
-            sp1.a.decompose()
+
+        txt1 = str(sp1)
+        for x in sp1.findAll('a'):
+            txt1 = txt1.replace(str(x), ' ' + x.text + ' ')
+
+        #txt1 = re.sub(r'\S+.com\S+', '', txt1)
+        hashTagList = re.findall(r'#(\w+)', txt1)
+        mentionList = re.findall(r'@(\w+)', txt1)
+        #txt1 = re.sub(r'https?://\S+', '', txt1)
 
         if emoji == 'ignore':
-            return sp1.text
+            return BeautifulSoup(txt1, "lxml").text, hashTagList, mentionList
 
-        text1 = str(sp1)        
+        #text1 = str(sp1)
         for x in sp1.find_all('img'):
             if emoji == 'unicode':
-                text1 = text1.replace(str(x), str(x['alt']))
-            elif emoji == 'name':
-                text1 = text1.replace(str(x), str(x['title']))
-                        
-        return BeautifulSoup(text1, "lxml").text
+                txt1 = txt1.replace(str(x), str(x['alt']))
+            elif emoji == 'named':
+                txt1 = txt1.replace(str(x), str(x['title']))
+        
+        return BeautifulSoup(txt1, "lxml").text, hashTagList, mentionList
 
     @staticmethod
     def parse_attributes(markup):
